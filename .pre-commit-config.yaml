@@ -1,0 +1,107 @@
+---
+# See https://pre-commit.com for more information
+# See https://pre-commit.com/hooks.html for more hooks
+default_stages: [pre-commit]
+repos:
+- repo: https://github.com/python-jsonschema/check-jsonschema
+  rev: b035497fb64e3f9faa91e833331688cc185891e6  # frozen: 0.36.0
+  hooks:
+  - id: check-github-actions
+    additional_dependencies:
+    - pip_system_certs==4.0
+  - id: check-dependabot
+    additional_dependencies:
+    - pip_system_certs==4.0
+  - id: check-jsonschema
+    alias: check-vcpkg-json
+    name: Check vcpkg manifest
+    files: ^vcpkg\.json$
+    args: [--schemafile, 'https://raw.githubusercontent.com/microsoft/vcpkg-tool/main/docs/vcpkg.schema.json']
+    additional_dependencies:
+    - pip_system_certs==4.0
+- repo: https://github.com/pre-commit/mirrors-clang-format
+  # This should always match with the version shipped with Visual Studio installed in Azure DevOps images
+  rev: cb4e971b802ef21263cdbf210e7d411123452a72  # frozen: v19.1.5
+  hooks:
+  - id: clang-format
+    types_or: [c, c++]
+    exclude: .github
+- repo: https://github.com/cheshirekow/cmake-format-precommit
+  rev: e2c2116d86a80e72e7146a06e68b7c228afc6319  # frozen: v0.6.13
+  hooks:
+  - id: cmake-format
+    additional_dependencies: [pyyaml>=5.1]  # see https://github.com/cheshirekow/cmake-format-precommit/pull/4#issuecomment-943444582
+    args: [-i, --config-files=.cmake_format.py]
+    # 1. these are auto-generated from a Python script and should not be formatted
+    # 2. the Windows toolchain files are not formatted to avoid conflicts with upstream
+    exclude: (.vcpkg-overlays/toolchains/.*_include.cmake|cmake/toolchains/msvc/.*)$
+  - id: cmake-lint
+    additional_dependencies: [pyyaml>=5.1]  # see https://github.com/cheshirekow/cmake-format-precommit/pull/4#issuecomment-943444582
+    args: [--config-files=.cmake_format.py]
+    exclude: (.vcpkg-overlays/toolchains/.*_include.cmake|cmake/toolchains/msvc/.*)$
+- repo: https://github.com/google/yamlfmt
+  rev: b5ca1890231d5e1e5181fef75a1be609d1e25029  # frozen: v0.21.0
+  hooks:
+  - id: yamlfmt
+    exclude: (.clang-(format|tidy)|tests/python/test_.*)
+- repo: https://github.com/astral-sh/ruff-pre-commit
+  # Ruff version.
+  rev: 5ba58aca0bd5bc7c0e1c0fc45af2e88d6a2bde83  # frozen: v0.14.10
+  hooks:
+  - id: ruff-check
+  - id: ruff-format
+- repo: https://github.com/hukkin/mdformat
+  rev: 83dc2ce5ca115d3390b9b5561d2898366faf0742  # frozen: 0.7.22
+  hooks:
+  - id: mdformat
+    # plugins
+    additional_dependencies: [mdformat-gfm, mdformat-myst, mdformat-tables]
+- repo: https://github.com/Mateusz-Grzelinski/actionlint-py
+  rev: 85c37735ea69e5baf0681530e57e63deee0ce733  # frozen: v1.7.10.24
+  hooks:
+  - id: actionlint
+    additional_dependencies: [pyflakes>=3.0.1, shellcheck-py>=0.9.0.5]
+- repo: https://github.com/shellcheck-py/shellcheck-py
+  rev: 745eface02aef23e168a8afb6b5737818efbea95  # frozen: v0.11.0.1
+  hooks:
+  - id: shellcheck
+- repo: https://github.com/editorconfig-checker/editorconfig-checker.python
+  rev: 11ea70506fd878d26129b2b87746fd1a1f6b561b  # frozen: 3.6.0
+  hooks:
+  - id: editorconfig-checker
+    alias: ec
+# this should go last since it will fix line endings broken by other tools
+- repo: https://github.com/pre-commit/pre-commit-hooks
+  rev: 3e8a8703264a2f4a69428a0aa4dcb512790b2c8c  # frozen: v6.0.0
+  hooks:
+  - id: no-commit-to-branch
+    args: [--branch, main]
+  - id: trailing-whitespace
+    # The pre-commit check on CI detects some whitespace changes if we include .github
+    stages: [pre-commit]
+    exclude: .github
+  - id: check-added-large-files
+    stages: [pre-commit]
+  - id: check-case-conflict
+  - id: mixed-line-ending
+    args: [--fix=auto]
+    stages: [pre-commit]
+  - id: end-of-file-fixer
+    stages: [pre-commit]
+  - id: check-yaml
+  - id: check-xml
+  - id: check-json
+  - id: check-toml
+  - id: pretty-format-json
+    args: [--autofix, --no-sort-keys, --indent=4]
+    exclude: .*\.ipynb$
+  - id: check-symlinks
+  - id: debug-statements
+  - id: fix-byte-order-marker
+- repo: local
+  hooks:
+  - id: reject-user-presets
+    name: CMakeUserPresets.json must not be committed
+    entry: reject CMakeUserPresets.json
+    language: fail
+    files: CMakeUserPresets.json
