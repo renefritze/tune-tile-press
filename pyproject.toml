@@ -28,8 +28,8 @@ version-file = "_version.py"
 [dependency-groups]
 docs = [
     "sphinx>=6",
-    "sphinx-autoapi>=3",
-    "myst-nb>=0.18",
+    "sphinx-autoapi>=3.8.0",
+    "myst-nb>=1.4.0",
     "furo>=2023.9.10"
 ]
 dev = [
